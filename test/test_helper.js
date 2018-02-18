@@ -3,21 +3,15 @@ const mongoose = require('mongoose');
 before((done) => {
     mongoose.connect('mongodb://localhost/muber_test');
     mongoose.connection
-        .once('open', () => {
-            console.log('connected to database');
-            done();
-        })
+        .once('open', () => done())
         .on('error', error => console.warn('Warning - ', error));
 });
 
 beforeEach(done => {
-    mongoose.connection.collections.drivers.drop()
-        .then(() => {
-            console.log('Database drivers dropped');
-            done();
-        })
-        .catch((error) => {
-            console.warn('Error dropping database', error);
-            done()
-        });
+    const { drivers } = mongoose.connection.collections;
+    
+    drivers.drop()
+        .then(() => drivers.createIndex({ 'geometry.coordinates':'2dsphere'}))
+        .then(() => done())
+        .catch((error) => done());
 });
